@@ -1,3 +1,4 @@
+# backend/main.py (only the /suggest-schema-web route changed)
 import json
 from typing import List, Dict, Optional
 from fastapi import FastAPI, Depends, HTTPException
@@ -7,9 +8,10 @@ from config import get_settings, Settings
 from synthetic_engine import generate_dataset
 from groq import Groq
 
+from schema_web_suggest import suggest_schema_from_web  # <-- unchanged import
+
 app = FastAPI()
 
-# Specifically allow your Next.js port
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -43,6 +45,14 @@ async def suggest_schema(description: str, settings: Settings = Depends(get_sett
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/suggest-schema-web")
+async def suggest_schema_web(description: str, settings: Settings = Depends(get_settings)):
+    try:
+        ua = "DataSynth.RAG/1.0 (https://github.com/your/repo; mailto:you@example.com)"
+        return suggest_schema_from_web(description, max_fields=settings.max_columns, user_agent=ua)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/generate")
 async def generate_data(req: GenRequest, settings: Settings = Depends(get_settings)):
     try:
@@ -54,7 +64,6 @@ async def generate_data(req: GenRequest, settings: Settings = Depends(get_settin
             api_key=settings.groq_api_key,
             model=settings.model_name
         )
-        # Ensure 'dataset' is a List of Dictionaries
-        return dataset 
+        return dataset
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
