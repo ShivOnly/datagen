@@ -21,7 +21,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { Download, Plus, ArrowLeft, Play, Sun, Moon } from 'lucide-react';
+import { Download, ArrowLeft, Play, Sun, Moon } from 'lucide-react';
 
 type DataRow = Record<string, string | number | boolean | null | undefined>;
 type ChartType = 'bar' | 'line' | 'pie';
@@ -57,7 +57,7 @@ export default function Home() {
           .map((v) => {
             const s = v == null ? '' : String(v);
             return s.includes(',') || s.includes('"') || s.includes('\n')
-              ? `"${s.replace(/"/g, '""')}"`
+              ? `"${s.replace(/"/g, '""')}"` // escape quotes
               : s;
           })
           .join(',')
@@ -107,7 +107,7 @@ export default function Home() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const result = await res.json();
       setFields(result.fields.map((f: any) => ({ ...f, useAI: true })));
-      setReasoning(result.global_reasoning);
+      setReasoning(result.global_reasoning ?? '');
       setStep(2);
     } catch (e) {
       console.error('Web Suggestion Error:', e);
@@ -127,7 +127,7 @@ export default function Home() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const result = await res.json();
       setFields(result.fields.map((f: any) => ({ ...f, useAI: true })));
-      setReasoning(result.global_reasoning);
+      setReasoning(result.global_reasoning ?? '');
       setStep(2);
     } catch (e) {
       console.error('AI Suggestion Error:', e);
@@ -492,7 +492,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Right column - NEW: fully controlled Chart card */}
+                {/* Right column - Chart + AI Reasoning */}
                 <aside className="flex-1 flex flex-col gap-6">
                   <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
                     <h3 className="font-bold mb-4 text-slate-800 dark:text-slate-200">Data Distribution</h3>
@@ -572,7 +572,6 @@ export default function Home() {
                               outerRadius={100}
                               paddingAngle={2}
                               isAnimationActive={false}
-                              // No labels to avoid overlap; tooltip + legend instead
                               labelLine={false}
                             >
                               {processed.forPie.map((entry, idx) => (
@@ -667,6 +666,20 @@ export default function Home() {
                         </ResponsiveContainer>
                       )}
                     </div>
+                  </div>
+
+                  {/* ✅ AI Reasoning card restored */}
+                  <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                    <h3 className="font-bold mb-3 text-slate-800 dark:text-slate-200">AI Reasoning</h3>
+                    {reasoning ? (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed whitespace-pre-line">
+                        {reasoning}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">
+                        No reasoning available.
+                      </p>
+                    )}
                   </div>
 
                   <button
